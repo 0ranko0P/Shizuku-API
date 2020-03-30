@@ -1,0 +1,34 @@
+buildscript {
+    repositories {
+        jcenter()
+        google()
+        maven { url 'http://storage.googleapis.com/r8-releases/raw' }
+    }
+    dependencies {
+        classpath 'com.android.tools:r8:2.0.23'
+        classpath 'com.android.tools.build:gradle:4.0.0-beta03'
+
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+        google()
+    }
+    tasks.withType(Javadoc) {
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+
+ext {
+    minSdkVersion = 21
+    targetSdkVersion = 29
+
+    apiVersionName = '3.1.0'
+}

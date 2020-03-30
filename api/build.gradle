@@ -1,0 +1,34 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion rootProject.ext.targetSdkVersion
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        manifestPlaceholders = [versionName: apiVersionName]
+        consumerProguardFiles 'consumer-rules.pro'
+    }
+    buildFeatures {
+        buildConfig = false
+    }
+}
+
+repositories {
+    mavenLocal()
+}
+
+dependencies {
+    implementation "androidx.annotation:annotation:1.1.0"
+    api "moe.shizuku.privilege:shared:$apiVersionName"
+    compileOnly project(':hidden-api-common')
+}
+
+project.ext {
+    mavProjectName = 'api'
+    mavLibraryDescription = 'Shizuku V3'
+}
+
+group = 'moe.shizuku.privilege'
+version = android.defaultConfig.versionName
+
+apply from: rootProject.file('publish.gradle')
