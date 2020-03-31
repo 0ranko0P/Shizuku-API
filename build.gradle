@@ -2,10 +2,8 @@ buildscript {
     repositories {
         jcenter()
         google()
-        maven { url 'http://storage.googleapis.com/r8-releases/raw' }
     }
     dependencies {
-        classpath 'com.android.tools:r8:2.0.23'
         classpath 'com.android.tools.build:gradle:4.0.0-beta03'
     }
 }
