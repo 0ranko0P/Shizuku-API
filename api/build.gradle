@@ -31,4 +31,3 @@ project.ext {
 group = 'moe.shizuku.privilege'
 version = android.defaultConfig.versionName
 
-apply from: rootProject.file('publish.gradle')
