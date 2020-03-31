@@ -40,7 +40,3 @@ project.ext {
 
 group = 'rikka.shizuku'
 version = android.defaultConfig.versionName
-
-if (rootProject.file('publish.gradle').canRead()) {
-    apply from: rootProject.file('publish.gradle')
-}
