@@ -15,6 +15,8 @@ import moe.shizuku.server.IRemoteProcess;
 public class RemoteProcess extends Process implements Parcelable {
 
     private final IRemoteProcess mRemote;
+    private OutputStream os;
+    private InputStream is;
 
     RemoteProcess(IRemoteProcess remote) {
         mRemote = remote;
@@ -22,20 +24,26 @@ public class RemoteProcess extends Process implements Parcelable {
 
     @Override
     public OutputStream getOutputStream() {
-        try {
-            return new ParcelFileDescriptor.AutoCloseOutputStream(mRemote.getOutputStream());
-        } catch (RemoteException e) {
-            throw new RuntimeException(e);
+        if (os == null) {
+            try {
+                os = new ParcelFileDescriptor.AutoCloseOutputStream(mRemote.getOutputStream());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
         }
+        return os;
     }
 
     @Override
     public InputStream getInputStream() {
-        try {
-            return new ParcelFileDescriptor.AutoCloseInputStream(mRemote.getInputStream());
-        } catch (RemoteException e) {
-            throw new RuntimeException(e);
+        if (is == null) {
+            try {
+                is = new ParcelFileDescriptor.AutoCloseInputStream(mRemote.getInputStream());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
         }
+        return is;
     }
 
     @Override
