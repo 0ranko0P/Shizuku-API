@@ -5,7 +5,8 @@ android {
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        manifestPlaceholders = [versionName: apiVersionName]
+        versionName rootProject.ext.apiVersionName
+        manifestPlaceholders = [versionName: rootProject.ext.apiVersionName]
         consumerProguardFiles 'consumer-rules.pro'
     }
     buildFeatures {
@@ -19,7 +20,7 @@ repositories {
 
 dependencies {
     implementation "androidx.annotation:annotation:1.1.0"
-    api "moe.shizuku.privilege:shared:$apiVersionName"
+    api "moe.shizuku.privilege:shared:${rootProject.ext.apiVersionName}"
     compileOnly project(':hidden-api-common')
 }
 
