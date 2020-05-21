@@ -13,10 +13,11 @@ public class ShizukuService {
 
     private static IShizukuService sService;
 
-    public static void setBinder(IBinder binder) {
+    public static void setBinder(@NonNull IBinder binder) {
         sService = IShizukuService.Stub.asInterface(binder);
     }
 
+    @NonNull
     private static IShizukuService requireService() {
         if (getService() == null) {
             throw new IllegalStateException("Binder haven't received, check Shizuku and your code.");
@@ -24,10 +25,12 @@ public class ShizukuService {
         return getService();
     }
 
+    @Nullable
     private static IShizukuService getService() {
         return sService;
     }
 
+    @Nullable
     public static IBinder getBinder() {
         IShizukuService service = getService();
         return service != null ? service.asBinder() : null;

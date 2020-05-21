@@ -21,7 +21,7 @@ import java.util.Objects;
  */
 public class ShizukuBinderWrapper implements IBinder {
 
-    private IBinder original;
+    private final IBinder original;
 
     public ShizukuBinderWrapper(@NonNull IBinder original) {
         this.original = Objects.requireNonNull(original);

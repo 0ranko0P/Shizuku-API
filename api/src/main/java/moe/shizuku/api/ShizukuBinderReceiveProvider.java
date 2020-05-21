@@ -51,7 +51,7 @@ public class ShizukuBinderReceiveProvider extends ContentProvider {
 
     @Nullable
     @Override
-    public final Bundle call(@NonNull String method, @Nullable String arg, @Nullable Bundle extras) {
+    public Bundle call(@NonNull String method, @Nullable String arg, @Nullable Bundle extras) {
         if (extras == null)
             return null;
 
