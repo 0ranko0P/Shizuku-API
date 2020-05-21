@@ -28,19 +28,7 @@ public class ShizukuClientHelper {
     }
 
     public static boolean isManagerV3Installed(@NonNull Context context) {
-        try {
-            return context.getPackageManager().getPackageInfo(ShizukuApiConstants.MANAGER_APPLICATION_ID, 0).versionCode >= 183;
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
-        }
-    }
-
-    public static boolean isManagerV2Installed(@NonNull Context context) {
-        try {
-            return context.getPackageManager().getPackageInfo(ShizukuApiConstants.MANAGER_APPLICATION_ID, 0).versionCode >= 106;
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
-        }
+        return getManagerVersionCode(context) >= 183;
     }
 
     public static int getManagerVersionCode(@NonNull Context context) {

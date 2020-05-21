@@ -6,11 +6,8 @@ import android.os.RemoteException;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 
 import moe.shizuku.server.IShizukuService;
-
-import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP_PREFIX;
 
 public class ShizukuService {
 
@@ -99,17 +96,6 @@ public class ShizukuService {
     }
 
     /**
-     * Set token of current process. Do not call this on API 23+.
-     *
-     * @param token token
-     * @return is token correct
-     * @throws IllegalStateException call on API 23+
-     */
-    public static boolean setTokenPre23(String token) throws RemoteException {
-        return requireService().setUidToken(token);
-    }
-
-    /**
      * Returns SELinux context of Shizuku server process.
      *
      * <p>This API is only meaningful for root app using {@link ShizukuService#newProcess(String[], String[], String)}.</p>
@@ -124,13 +110,5 @@ public class ShizukuService {
      */
     public static String getSELinuxContext() throws RemoteException {
         return requireService().getSELinuxContext();
-    }
-
-    /**
-     * Used by manager only.
-     */
-    @RestrictTo(LIBRARY_GROUP_PREFIX)
-    public static void setUidPermissionPre23(int uid, boolean granted) throws RemoteException {
-        requireService().setUidPermissionPre23(uid, granted);
     }
 }
