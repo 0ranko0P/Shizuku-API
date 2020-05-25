@@ -1,6 +1,5 @@
 package moe.shizuku.api;
 
-import android.os.Binder;
 import android.os.IBinder;
 import android.os.IInterface;
 import android.os.Parcel;

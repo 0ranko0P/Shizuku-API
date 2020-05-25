@@ -5,7 +5,7 @@ buildscript {
         maven { url 'http://storage.googleapis.com/r8-releases/raw' }
     }
     dependencies {
-        classpath 'com.android.tools:r8:2.0.23'
+        classpath 'com.android.tools:r8:2.0.74'
         classpath 'com.android.tools.build:gradle:4.1.0-alpha09'
 
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
@@ -30,5 +30,5 @@ ext {
     minSdkVersion = 23
     targetSdkVersion = 29
 
-    apiVersionName = '3.3.0'
+    apiVersionName = '4.0.0'
 }

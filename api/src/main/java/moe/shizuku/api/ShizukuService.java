@@ -13,14 +13,14 @@ public class ShizukuService {
 
     private static IShizukuService sService;
 
-    public static void setBinder(@NonNull IBinder binder) {
+    public static void setBinder(@Nullable IBinder binder) {
         sService = IShizukuService.Stub.asInterface(binder);
     }
 
     @NonNull
     private static IShizukuService requireService() {
         if (getService() == null) {
-            throw new IllegalStateException("Binder haven't received, check Shizuku and your code.");
+            throw new IllegalStateException("Binder haven't been received, check Shizuku and your code.");
         }
         return getService();
     }
@@ -63,9 +63,14 @@ public class ShizukuService {
 
     /**
      * Start a new process at remote service, parameters are passed to {@link java.lang.Runtime#exec(String, String[], java.io.File)}.
+     * <p>
+     * DO NOT abuse this.
+     * </p>
      *
      * @return RemoteProcess holds the binder of remote process
+     * @deprecated It's improper to allow client to run the commands directly. This method may be removed in the future.
      */
+    @Deprecated
     public static RemoteProcess newProcess(@NonNull String[] cmd, @Nullable String[] env, @Nullable String dir) throws RemoteException {
         return new RemoteProcess(requireService().newProcess(cmd, env, dir));
     }
@@ -86,6 +91,16 @@ public class ShizukuService {
      */
     public static int getVersion() throws RemoteException {
         return requireService().getVersion();
+    }
+
+    /**
+     * Return latest service version when this library was released.
+     *
+     * @see ShizukuService#getVersion()
+     * @return Latest service version
+     */
+    public static int getLatestServiceVersion() {
+        return ShizukuApiConstants.SERVER_VERSION;
     }
 
     /**
