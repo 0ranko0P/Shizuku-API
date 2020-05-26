@@ -64,11 +64,12 @@ public class ShizukuService {
     /**
      * Start a new process at remote service, parameters are passed to {@link java.lang.Runtime#exec(String, String[], java.io.File)}.
      * <p>
-     * DO NOT abuse this.
+     * Note, you may need to read/write streams from RemoteProcess in different threads.
      * </p>
      *
      * @return RemoteProcess holds the binder of remote process
-     * @deprecated It's improper to allow client to run the commands directly. This method may be removed in the future.
+     * @deprecated This method is super easy to be abused, it may be removed in the future.
+     * Currently the only known use is install packages, but use binder in much more easier (see sample).
      */
     @Deprecated
     public static RemoteProcess newProcess(@NonNull String[] cmd, @Nullable String[] env, @Nullable String dir) throws RemoteException {
