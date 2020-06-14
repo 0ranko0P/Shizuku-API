@@ -6,7 +6,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools:r8:2.0.74'
-        classpath 'com.android.tools.build:gradle:4.1.0-alpha09'
+        classpath 'com.android.tools.build:gradle:4.1.0-alpha10'
 
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
     }

@@ -4,6 +4,8 @@ import moe.shizuku.server.IRemoteProcess;
 
 interface IShizukuService {
 
+    void exit() = 100;
+
     int getVersion() = 2;
 
     int getUid() = 3;
