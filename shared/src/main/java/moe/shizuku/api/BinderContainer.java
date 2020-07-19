@@ -4,6 +4,11 @@ import android.os.IBinder;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.annotation.RestrictTo;
+
+import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP_PREFIX;
+
+@RestrictTo(LIBRARY_GROUP_PREFIX)
 public class BinderContainer implements Parcelable {
 
     public IBinder binder;

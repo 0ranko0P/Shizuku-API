@@ -6,31 +6,31 @@ import android.os.RemoteException;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 
 import moe.shizuku.server.IShizukuService;
-
-import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP_PREFIX;
 
 public class ShizukuService {
 
     private static IShizukuService sService;
 
-    public static void setBinder(IBinder binder) {
+    public static void setBinder(@Nullable IBinder binder) {
         sService = IShizukuService.Stub.asInterface(binder);
     }
 
+    @NonNull
     private static IShizukuService requireService() {
         if (getService() == null) {
-            throw new IllegalStateException("Binder haven't received, check Shizuku and your code.");
+            throw new IllegalStateException("Binder haven't been received, check Shizuku and your code.");
         }
         return getService();
     }
 
+    @Nullable
     private static IShizukuService getService() {
         return sService;
     }
 
+    @Nullable
     public static IBinder getBinder() {
         IShizukuService service = getService();
         return service != null ? service.asBinder() : null;
@@ -63,9 +63,15 @@ public class ShizukuService {
 
     /**
      * Start a new process at remote service, parameters are passed to {@link java.lang.Runtime#exec(String, String[], java.io.File)}.
+     * <p>
+     * Note, you may need to read/write streams from RemoteProcess in different threads.
+     * </p>
      *
      * @return RemoteProcess holds the binder of remote process
+     * @deprecated This method is super easy to be abused, it may be removed in the future.
+     * Currently the only known use is install packages, but use binder in much more easier (see sample).
      */
+    @Deprecated
     public static RemoteProcess newProcess(@NonNull String[] cmd, @Nullable String[] env, @Nullable String dir) throws RemoteException {
         return new RemoteProcess(requireService().newProcess(cmd, env, dir));
     }
@@ -89,6 +95,16 @@ public class ShizukuService {
     }
 
     /**
+     * Return latest service version when this library was released.
+     *
+     * @see ShizukuService#getVersion()
+     * @return Latest service version
+     */
+    public static int getLatestServiceVersion() {
+        return ShizukuApiConstants.SERVER_VERSION;
+    }
+
+    /**
      * Check permission at remote service.
      *
      * @param permission permission name
@@ -96,17 +112,6 @@ public class ShizukuService {
      */
     public static int checkPermission(String permission) throws RemoteException {
         return requireService().checkPermission(permission);
-    }
-
-    /**
-     * Set token of current process. Do not call this on API 23+.
-     *
-     * @param token token
-     * @return is token correct
-     * @throws IllegalStateException call on API 23+
-     */
-    public static boolean setTokenPre23(String token) throws RemoteException {
-        return requireService().setUidToken(token);
     }
 
     /**
@@ -124,13 +129,5 @@ public class ShizukuService {
      */
     public static String getSELinuxContext() throws RemoteException {
         return requireService().getSELinuxContext();
-    }
-
-    /**
-     * Used by manager only.
-     */
-    @RestrictTo(LIBRARY_GROUP_PREFIX)
-    public static void setUidPermissionPre23(int uid, boolean granted) throws RemoteException {
-        requireService().setUidPermissionPre23(uid, granted);
     }
 }

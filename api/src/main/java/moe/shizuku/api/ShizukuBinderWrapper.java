@@ -1,6 +1,5 @@
 package moe.shizuku.api;
 
-import android.os.Binder;
 import android.os.IBinder;
 import android.os.IInterface;
 import android.os.Parcel;
@@ -21,7 +20,7 @@ import java.util.Objects;
  */
 public class ShizukuBinderWrapper implements IBinder {
 
-    private IBinder original;
+    private final IBinder original;
 
     public ShizukuBinderWrapper(@NonNull IBinder original) {
         this.original = Objects.requireNonNull(original);

@@ -14,8 +14,8 @@ import java.util.Objects;
 
 public class SystemServiceHelper {
 
-    private static Map<String, IBinder> systemServiceCache = new HashMap<>();
-    private static Map<String, Integer> transactCodeCache = new HashMap<>();
+    private static final Map<String, IBinder> SYSTEM_SERVICE_CACHE = new HashMap<>();
+    private static final Map<String, Integer> TRANSACT_CODE_CACHE = new HashMap<>();
 
     /**
      * Returns a reference to a service with the given name.
@@ -24,10 +24,10 @@ public class SystemServiceHelper {
      * @return a reference to the service, or <code>null</code> if the service doesn't exist
      */
     public static IBinder getSystemService(@NonNull String name) {
-        IBinder binder = systemServiceCache.get(name);
+        IBinder binder = SYSTEM_SERVICE_CACHE.get(name);
         if (binder == null) {
             binder = ServiceManager.getService(name);
-            systemServiceCache.put(name, binder);
+            SYSTEM_SERVICE_CACHE.put(name, binder);
         }
         return binder;
     }
@@ -43,7 +43,7 @@ public class SystemServiceHelper {
         final String fieldName = "TRANSACTION_" + methodName;
         final String key = className + "." + fieldName;
 
-        Integer value = transactCodeCache.get(key);
+        Integer value = TRANSACT_CODE_CACHE.get(key);
         if (value != null) return value;
 
         try {
@@ -71,7 +71,7 @@ public class SystemServiceHelper {
             declaredField.setAccessible(true);
             value = declaredField.getInt(cls);
 
-            transactCodeCache.put(key, value);
+            TRANSACT_CODE_CACHE.put(key, value);
             return value;
         } catch (ClassNotFoundException | IllegalAccessException e) {
             e.printStackTrace();
