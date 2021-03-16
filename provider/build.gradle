@@ -1,6 +1,5 @@
 plugins {
     id('com.android.library')
-    id('com.vanniktech.maven.publish')
 }
 
 android {
@@ -30,9 +29,4 @@ android {
 dependencies {
     implementation project(':api')
     implementation "androidx.annotation:annotation:1.1.0"
-}
-
-ext {
-    POM_NAME = "Shizuku API - provider"
-    POM_DESCRIPTION = "Content Provider for Shizuku."
 }
