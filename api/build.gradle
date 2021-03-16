@@ -1,5 +1,6 @@
 plugins {
-    id 'com.android.library'
+    id('com.android.library')
+    id('com.vanniktech.maven.publish')
 }
 
 android {
@@ -33,10 +34,7 @@ dependencies {
     implementation "androidx.annotation:annotation:1.1.0"
 }
 
-project.ext {
-    mavProjectName = 'rikka.shizuku:api'
-    mavLibraryDescription = 'The API for Sui.'
+ext {
+    POM_NAME = "Shizuku API - API"
+    POM_DESCRIPTION = "API of Shizuku and Sui."
 }
-
-group = 'rikka.shizuku'
-version = android.defaultConfig.versionName

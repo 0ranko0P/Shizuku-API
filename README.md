@@ -56,6 +56,27 @@ For existing applications, there is an API that allows you to create a "sh" as r
 
   Use "User service" with JNI or continue to use shell.
 
+## Migration guide for existing applications use Shizuku pre-v11
+<details>
+  <summary>Click to expand</summary>
+
+### Changes
+
+- Dependency changed (see Guide below)
+- Self-implemented permission is used from v11, the API is same to runtime permission (see demo, and existing runtime permission still works)
+- Package name is rename to `rikka.shizuku` (replace all `moe.shizuku.api.` to `rikka.shizuku.`)
+- `ShizukuService` class is renamed to `Shizuku`
+- Methods in `Shizuku` class now throw `RuntimeException` rather than `RemoteException` like other Android APIs
+- Listeners are moved from `ShizukuProvider` class to `Shizuku` class
+
+### Add support for Sui
+
+- Call `Sui#init()`
+- Do not use `ShizukuProvider#isShizukuInstalled` since Sui does not have a manager
+- It's better to use check Sui with `Sui#isSui` before using Shizuku only methods in `ShizukuProvider`
+
+</details>
+
 ## Guide
 
 Note, something is not mentioned below, please be sure to read the [demo](https://github.com/RikkaApps/Shizuku-API/tree/master/demo).
@@ -63,19 +84,24 @@ Note, something is not mentioned below, please be sure to read the [demo](https:
 1. Add dependency
 
    ```
-   maven { url 'https://dl.bintray.com/rikkaw/Libraries' }
+   repositories {
+       mavenCentral()
+   }
    ```
    
    ```
-   def shizuku_version = '11.0.0'
+   def shizuku_version = '11.0.2'
+   implementation "dev.rikka.shizuku:api:$shizuku_version"
 
-   // required by Shizuku and Sui
-   implementation "rikka.shizuku:api:$shizuku_version"
-
-   // required by Shizuku
-   implementation "rikka.shizuku:provider:$shizuku_version"
+   // add this if you want to support Shizuku
+   implementation "dev.rikka.shizuku:provider:$shizuku_version"
    ```
+
+   Since all root users using Shizuku will eventually switch to Sui, if your application requires root, it's better not to support Shizuku from the begining.
+
 2. Add `ShizukuProvider` (Shizuku only)
+
+   Don't add this if your app only supports Sui.
 
    Add to your `AndroidManifest.xml`.
 
