@@ -6,7 +6,7 @@ import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP_PREFIX;
 
 public class ShizukuApiConstants {
 
-    public static final int SERVER_VERSION = 11;
+    public static final int SERVER_VERSION = 12;
 
     // binder
     public static final String BINDER_DESCRIPTOR = "moe.shizuku.server.IShizukuService";
@@ -21,6 +21,9 @@ public class ShizukuApiConstants {
     public static final String USER_SERVICE_ARG_DEBUGGABLE = "shizuku:user-service-arg-debuggable";
     public static final String USER_SERVICE_ARG_VERSION_CODE = "shizuku:user-service-arg-version-code";
     public static final String USER_SERVICE_ARG_PROCESS_NAME = "shizuku:user-service-arg-process-name";
+    public static final String USER_SERVICE_ARG_NO_CREATE = "shizuku:user-service-arg-no-create";
+    public static final String USER_SERVICE_ARG_DAEMON = "shizuku:user-service-arg-daemon";
+    public static final String USER_SERVICE_ARG_USE_32_BIT_APP_PROCESS = "shizuku:user-service-arg-use-32-bit-app-process";
 
     @RestrictTo(LIBRARY_GROUP_PREFIX)
     public static final String USER_SERVICE_ARG_TOKEN = "shizuku:user-service-arg-token";

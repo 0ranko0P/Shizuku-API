@@ -1,5 +1,14 @@
 package rikka.shizuku;
 
+import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP_PREFIX;
+import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_PERMISSION_GRANTED;
+import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_SERVER_PATCH_VERSION;
+import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_SERVER_SECONTEXT;
+import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_SERVER_UID;
+import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_SERVER_VERSION;
+import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE;
+import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
+
 import android.content.ComponentName;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
@@ -22,15 +31,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import moe.shizuku.server.IShizukuApplication;
 import moe.shizuku.server.IShizukuService;
 
-import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP_PREFIX;
-import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_PERMISSION_GRANTED;
-import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_SERVER_PATCH_VERSION;
-import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_SERVER_SECONTEXT;
-import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_SERVER_UID;
-import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_SERVER_VERSION;
-import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE;
-import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
-
 public class Shizuku {
 
     private static IBinder binder;
@@ -43,6 +43,7 @@ public class Shizuku {
     private static boolean permissionGranted = false;
     private static boolean shouldShowRequestPermissionRationale = false;
     private static boolean preV11 = false;
+    private static boolean binderReady = false;
 
     private static final IShizukuApplication SHIZUKU_APPLICATION = new IShizukuApplication.Stub() {
 
@@ -54,6 +55,8 @@ public class Shizuku {
             serverContext = data.getString(ATTACH_REPLY_SERVER_SECONTEXT);
             permissionGranted = data.getBoolean(ATTACH_REPLY_PERMISSION_GRANTED, false);
             shouldShowRequestPermissionRationale = data.getBoolean(ATTACH_REPLY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE, false);
+
+            scheduleBinderReceivedListeners();
         }
 
         @Override
@@ -68,7 +71,10 @@ public class Shizuku {
         }
     };
 
-    private static final IBinder.DeathRecipient DEATH_RECIPIENT = () -> onBinderReceived(null, null);
+    private static final IBinder.DeathRecipient DEATH_RECIPIENT = () -> {
+        binderReady = false;
+        onBinderReceived(null, null);
+    };
 
     @RestrictTo(LIBRARY_GROUP_PREFIX)
     public static void onBinderReceived(@Nullable IBinder newBinder, String packageName) {
@@ -116,7 +122,10 @@ public class Shizuku {
                 Log.w("ShizukuApplication", Log.getStackTraceString(e));
             }
 
-            scheduleBinderReceivedListeners();
+            if (preV11) {
+                binderReady = true;
+                scheduleBinderReceivedListeners();
+            }
         }
     }
 
@@ -163,7 +172,7 @@ public class Shizuku {
     }
 
     private static void addBinderReceivedListener(@NonNull OnBinderReceivedListener listener, boolean sticky) {
-        if (sticky && pingBinder()) {
+        if (sticky && binderReady) {
             if (Looper.myLooper() == Looper.getMainLooper()) {
                 listener.onBinderReceived();
             } else {
@@ -196,6 +205,8 @@ public class Shizuku {
         for (OnBinderReceivedListener listener : RECEIVED_LISTENERS) {
             listener.onBinderReceived();
         }
+
+        binderReady = true;
     }
 
     /**
@@ -328,8 +339,8 @@ public class Shizuku {
      * @deprecated This method should only be used when you are transitioning from "su".
      * Use {@link Shizuku#transactRemote(Parcel, Parcel, int)} for binder calls and {@link Shizuku#bindUserService(UserServiceArgs, ServiceConnection)}
      * for complicated requirements.
+     * <p>This method is planned to be removed from Shizuku API 14.
      */
-    @Deprecated
     public static ShizukuRemoteProcess newProcess(@NonNull String[] cmd, @Nullable String[] env, @Nullable String dir) {
         try {
             return new ShizukuRemoteProcess(requireService().newProcess(cmd, env, dir));
@@ -435,13 +446,29 @@ public class Shizuku {
         String processName;
         String tag;
         boolean debuggable = false;
+        boolean daemon = true;
+        boolean use32BitAppProcess = false;
 
         public UserServiceArgs(@NonNull ComponentName componentName) {
             this.componentName = componentName;
         }
 
         /**
+         * Daemon controls if the service should be run as daemon mode.
+         * <br>Under non-daemon mode, the service will be stopped when the app process is dead.
+         * <br>Under daemon mode, the service will run forever until {@link Shizuku#unbindUserService(UserServiceArgs, ServiceConnection, boolean)} is called.
+         * <p>For upward compatibility reason, {@code daemon} is {@code true} by default.
+         *
+         * @param daemon Daemon
+         */
+        public UserServiceArgs daemon(boolean daemon) {
+            this.daemon = daemon;
+            return this;
+        }
+
+        /**
          * Tag is used to distinguish different services.
+         * <p>If you want to obfuscate the user service class, you need to set a stable tag.
          * <p>By default, user service is shared by the same packages installed in all users.
          *
          * @param tag Tag
@@ -453,8 +480,8 @@ public class Shizuku {
 
         /**
          * Version code is used to distinguish different services.
-         * <p>By default, user service lives longer than app's process. Use a different version code after upgrade can
-         * tell the server to recreate the user service.
+         * <p>Use a different version code when the service code is updated, so that
+         * the Shizuku or Sui server can recreate the user service for you.
          *
          * @param versionCode Version code
          */
@@ -484,13 +511,30 @@ public class Shizuku {
             return this;
         }
 
+        /**
+         * Set if the 32-bits app_process should be used on 64-bits devices.
+         * <p>This method will not work on 64-bits only devices.
+         * <p>You should NEVER use this method unless if you have special requirements.
+         * <p><strong>Reasons:</strong>
+         * <p><a href="https://developer.android.com/distribute/best-practices/develop/64-bit">Google has required since August 2019 that all apps submitted to Google Play are 64-bit.</a>
+         * <p><a href="https://www.arm.com/blogs/blueprint/64-bit">ARM announced that all Arm Cortex-A CPU mobile cores will be 64-bit only from 2023.</a>
+         *
+         * @param use32BitAppProcess Use 32bit app_process
+         */
+        private UserServiceArgs use32BitAppProcess(boolean use32BitAppProcess) {
+            this.use32BitAppProcess = use32BitAppProcess;
+            return this;
+        }
+
         private Bundle forAdd() {
             Bundle options = new Bundle();
             options.putParcelable(ShizukuApiConstants.USER_SERVICE_ARG_COMPONENT, componentName);
             options.putBoolean(ShizukuApiConstants.USER_SERVICE_ARG_DEBUGGABLE, debuggable);
             options.putInt(ShizukuApiConstants.USER_SERVICE_ARG_VERSION_CODE, versionCode);
+            options.putBoolean(ShizukuApiConstants.USER_SERVICE_ARG_DAEMON, daemon);
+            options.putBoolean(ShizukuApiConstants.USER_SERVICE_ARG_USE_32_BIT_APP_PROCESS, use32BitAppProcess);
             options.putString(ShizukuApiConstants.USER_SERVICE_ARG_PROCESS_NAME,
-                    Objects.requireNonNull(processName, "process name suffix must not be null when using standalone process mode"));
+                    Objects.requireNonNull(processName, "process name suffix must not be null"));
             if (tag != null) {
                 options.putString(ShizukuApiConstants.USER_SERVICE_ARG_TAG, tag);
             }
@@ -508,12 +552,29 @@ public class Shizuku {
     }
 
     /**
-     * Run service class from the apk of current app.
+     * User Service is similar to <a href="https://developer.android.com/guide/components/bound-services">Bound Services</a>.
+     * They are run in different processes and run as the identity of root or adb (if the user uses Shizuku with adb).
+     * <p>
+     * The user service is started from {@code app_process}, so there is no restrictions on non-SDK APIs.
+     * Note, the user service process is not an valid app process. Therefore, even you can acquire an
+     * {@code Context} instance from {@code android.app.ActivityThread.systemMain().getSystemContext()},
+     * many APIs, such as {@code Context#registerReceiver} and {@code Context#getContentResolver} will not work.
+     * <br>In most cases, it's more convenient and safe to use system APIs "directly". See demo for more.
+     * <p>
+     * The user service can run under "Daemon mode". Under "Daemon mode" (default behavior), the service will
+     * run forever until you call the "unbind" method. Under "Non-daemon mode", the service will be stopped
+     * when the process which called the "bind" method is dead.
+     * <p>
+     * When the "unbind" method is called, the user service will NOT be killed.
+     * You need to implement a "destroy" method in your service. The transaction code for that method
+     * is {@code 16777115} (use {@code 16777114} in aidl).
+     * In this method, you can do some cleanup jobs and call {@link System#exit(int)} in the end.
      *
+     * @see UserServiceArgs
      * @since added from version 10
      */
     public static void bindUserService(@NonNull UserServiceArgs args, @NonNull ServiceConnection conn) {
-        ShizukuServiceConnection connection = ShizukuServiceConnection.getOrCreate(args);
+        ShizukuServiceConnection connection = ShizukuServiceConnections.getOrCreate(args);
         connection.addConnection(conn);
         try {
             requireService().addUserService(connection, args.forAdd());
@@ -523,12 +584,36 @@ public class Shizuku {
     }
 
     /**
-     * Remove user service.
+     * Similar to {@link Shizuku#bindUserService(UserServiceArgs, ServiceConnection)}, but does not
+     * start user service if it is not running.
      *
+     * @return if the service is running
+     * @see Shizuku#bindUserService(UserServiceArgs, ServiceConnection)
+     * @since added from version 12
+     */
+    public static boolean peekUserService(@NonNull UserServiceArgs args, @NonNull ServiceConnection conn) {
+        ShizukuServiceConnection connection = ShizukuServiceConnections.getOrCreate(args);
+        connection.addConnection(conn);
+        int result;
+        try {
+            Bundle bundle = args.forAdd();
+            bundle.putBoolean(ShizukuApiConstants.USER_SERVICE_ARG_NO_CREATE, true);
+            result = requireService().addUserService(connection, bundle);
+        } catch (RemoteException e) {
+            throw rethrowAsRuntimeException(e);
+        }
+        return result == 0;
+    }
+
+    /**
+     * Remove user service.
+     * <p>You need to implement a "destroy" method in your service, or the service will not be killed.
+     *
+     * @see Shizuku#bindUserService(UserServiceArgs, ServiceConnection)
      * @param remove Remove (kill) the remote user service.
      */
-    public static void unbindUserService(@NonNull UserServiceArgs args, @NonNull ServiceConnection conn, boolean remove) {
-        ShizukuServiceConnection connection = ShizukuServiceConnection.get(args);
+    public static void unbindUserService(@NonNull UserServiceArgs args, @Nullable ServiceConnection conn, boolean remove) {
+        ShizukuServiceConnection connection = ShizukuServiceConnections.get(args);
         if (connection != null) {
             connection.removeConnection(conn);
         }
