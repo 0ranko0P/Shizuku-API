@@ -2,20 +2,19 @@
 buildscript {
     apply from: 'manifest.gradle'
 
-    ext.kotlinVersion = '1.5.30'
+    ext.kotlinVersion = '1.6.10'
     repositories {
-        mavenCentral()
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.1'
+        classpath 'com.android.tools.build:gradle:7.0.4'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        classpath 'dev.rikka.tools.refine:gradle-plugin:3.0.3'
     }
 }
 
 allprojects {
     repositories {
-        mavenCentral()
         google()
     }
     tasks.withType(Javadoc) {
